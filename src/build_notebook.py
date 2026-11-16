@@ -609,7 +609,7 @@ The model below adds fires, dispersion and rain together, with month fixed effec
 
 $$PM_t = \gamma_{m(t)} + \beta_1 \log(1+\text{Fires}_{600km,t}) + \beta_2\,VC_t + \beta_3\,\text{Rain}_t + \beta_4\,\text{RH}_t + \beta_5\,t + \varepsilon_t$$
 
-$t$ is a linear time trend. The BLH gap removes 7 months from this model.
+$t$ is a linear time trend. The BLH gap removes 6 months (January to June 2024) from this model.
 """)
 
 code(r"""
