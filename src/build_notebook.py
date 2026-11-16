@@ -160,6 +160,7 @@ md(r"""
 | Drop station-months flagged `**` (< 50 % valid data) | A monthly mean built on under half the month is not representative |
 | Keep `*` (50 to 75 %) but carry the flag | Still usable; checked in sensitivity analysis |
 | Logical check: min24h ≤ mean ≤ max24h | Detect transcription or parsing errors |
+| Duplicate check on (station, year, month) | Each station-month must appear once |
 | Exceedance days are **not compared across 1 Jun 2023** | The Thai 24-h standard was tightened from 50 to 37.5 µg/m³ on 1 June 2023, so counts before and after are on different thresholds. For long-run comparison I use a *consistent* metric instead: **months whose maximum 24-h mean exceeded 37.5 µg/m³** |
 """)
 
@@ -170,6 +171,9 @@ pm = pm[pm["completeness_flag"] != "**"]
 n_flag = n_all - len(pm)
 bad = pm[(pm["pm25_min24h"] > pm["pm25_mean"]) | (pm["pm25_max24h"] < pm["pm25_mean"])]
 print(f"Station-months with a PM2.5 mean: {n_all}; dropped (<50% data): {n_flag}; remaining: {len(pm)}")
+n_dup = pm_raw.duplicated(subset=["station_code","year","month"]).sum()
+print(f"Duplicate station-year-month records: {n_dup}")
+RESULTS["n_duplicates"] = int(n_dup)
 print("Rows failing min <= mean <= max:"); display(bad[["station_code","year","month","pm25_min24h","pm25_mean","pm25_max24h","raw"]])
 """)
 
@@ -337,6 +341,31 @@ display(pm.groupby("station_code").pm25_mean.describe().round(1).loc[st_order])
 """)
 
 md(r"""
+#### Descriptive statistics and the 1.5 × IQR outlier rule
+Following the course's EDA checklist (centre, spread, shape, tails, outliers): summary statistics, skewness and kurtosis, then the box-plot rule
+$\text{IQR} = Q_3 - Q_1$, lower fence $= Q_1 - 1.5\,\text{IQR}$, upper fence $= Q_3 + 1.5\,\text{IQR}$, applied **within each station** so that a clean station is not judged against a roadside one.
+""")
+
+code(r"""
+desc = pm.pm25_mean.describe()
+desc["skewness"] = stats.skew(pm.pm25_mean); desc["kurtosis (excess)"] = stats.kurtosis(pm.pm25_mean)
+display(desc.round(2).to_frame("monthly mean PM2.5 (µg/m³)"))
+q = pm.groupby("station_code").pm25_mean.quantile([0.25, 0.75]).unstack()
+q.columns = ["Q1", "Q3"]; q["IQR"] = q.Q3 - q.Q1
+q["lower_fence"], q["upper_fence"] = q.Q1 - 1.5 * q.IQR, q.Q3 + 1.5 * q.IQR
+pm_iqr = pm.merge(q[["lower_fence","upper_fence"]], left_on="station_code", right_index=True)
+out = pm_iqr[(pm_iqr.pm25_mean < pm_iqr.lower_fence) | (pm_iqr.pm25_mean > pm_iqr.upper_fence)]
+RESULTS["iqr_outliers"] = dict(n=int(len(out)), share=round(len(out) / len(pm), 3), months=sorted(out.date.dt.month.unique().tolist()),
+                               n_high=int((out.pm25_mean > out.upper_fence).sum()))
+print(f"Potential outliers by the 1.5×IQR rule: {len(out)} of {len(pm)} station-months ({100*len(out)/len(pm):.1f}%); high-side: {RESULTS['iqr_outliers']['n_high']}; calendar months involved: {RESULTS['iqr_outliers']['months']}")
+display(out.sort_values("pm25_mean", ascending=False)[["station_code","date","pm25_mean","pm25_max24h","upper_fence"]].round(1))
+""")
+
+md(r"""
+**Decision: keep them.** The flagged station-months are *high* values in dry-season months, and none is physically impossible. They are real pollution episodes, which are exactly what this study is about, so deleting them would hide the problem. As the course puts it, a potential outlier is not automatically bad data.
+""")
+
+md(r"""
 **Reading Figure 2:** the five highest-median stations are exactly the five roadside stations, led by 54R (Din Daeng Road) and 03R (Kanchanaphisek Road). 59T (Phaya Thai, general area) is the cleanest.
 Every station has a long upper tail, which comes from the dry-season months.
 
@@ -381,6 +410,34 @@ save(fig, "fig04_year_month_heatmap.png")
 md(r"""
 **Reading Figure 4:** January or February is the worst month in every year. January 2019 (52 µg/m³) is the single worst month in the record; 2016 to 2018 had very polluted Februaries; and 2023 is unusual because PM2.5 stayed high (39 µg/m³) through March and April.
 Note that 2016 values average fewer stations (Part 2.5), which is why the trend in Part 4 is estimated with station fixed effects.
+
+#### Time-series decomposition (STL)
+To separate the long-term signal from the seasonal cycle, the mean of the 5 continuously reporting stations (05T, 52R, 54R, 59T, 61T) is decomposed with **STL** (Seasonal-Trend decomposition using LOESS, period = 12 months, robust fitting), as in Lab 10:
+$PM_t = T_t + S_t + R_t$ (trend + seasonal + residual). Isolated one- or two-month gaps are linearly interpolated **for this decomposition only**.
+""")
+
+code(r"""
+from statsmodels.tsa.seasonal import STL
+s5_full = pm[pm.station_code.isin(["05T","52R","54R","59T","61T"]) & (pm.date >= "2016-07-01")].groupby("date").pm25_mean.mean()
+s5_full = s5_full.reindex(pd.date_range("2016-07-01", "2025-12-01", freq="MS"))
+n_interp = int(s5_full.isna().sum())
+stl = STL(s5_full.interpolate(limit=2), period=12, robust=True).fit()
+fig, axes = plt.subplots(4, 1, figsize=(11, 7.5), sharex=True)
+for ax, (lab, ser, col) in zip(axes, [("Observed", stl.observed, C1), ("Trend", stl.trend, INK), ("Seasonal", stl.seasonal, C2), ("Residual", stl.resid, INK2)]):
+    if lab == "Residual": ax.bar(ser.index, ser.values, width=25, color=col, alpha=0.7)
+    else: ax.plot(ser.index, ser.values, color=col, lw=1.6)
+    ax.set_ylabel(lab + "\n(µg/m³)", fontsize=9)
+axes[0].set_title("Figure 4b. STL decomposition, mean of 5 continuous stations")
+fig.tight_layout(); save(fig, "fig15_stl_decomposition.png")
+tr = stl.trend
+RESULTS["stl"] = dict(trend_first12=round(tr.iloc[:12].mean(), 1), trend_last12=round(tr.iloc[-12:].mean(), 1),
+                      seasonal_range=round(stl.seasonal.max() - stl.seasonal.min(), 1), months_interpolated=n_interp,
+                      var_share_seasonal=round(np.var(stl.seasonal) / np.var(stl.observed), 2))
+print(RESULTS["stl"])
+""")
+
+md(r"""
+**Reading Figure 4b:** the seasonal component carries most of the variation, and the trend component drifts down from the first to the last year (values printed above), with a temporary rise around 2023. Part 4.2 tests whether that decline is statistically real.
 
 ### 3.5 Candidate drivers: seasonal cycles side by side
 Each variable has its own units, so they are drawn as **small multiples** (one panel each) rather than on a shared or dual axis.
@@ -729,14 +786,18 @@ md(r"""
 1. a **hold-out on the future**: train on 2016 to 2023, test on 2024 to 2025;
 2. **rolling-origin evaluation**: train up to year Y−1, test on year Y, for Y = 2021 to 2025.
 
-**Baseline to beat:** each station's 2016 to 2023 average for that calendar month (*climatology*). A model is only useful if it beats this.
+**Baselines:** (i) the training mean (`DummyRegressor`, as in the course labs), and (ii) a stronger, more honest baseline: each station's 2016 to 2023 average for that calendar month (*climatology*). A model is only useful if it beats the climatology.
+**Pipeline:** Ridge regression is wrapped in a scikit-learn `Pipeline` (StandardScaler, then Ridge) so that scaling is fitted on training data only; station identity is one-hot encoded.
+**Tuning:** random-forest hyper-parameters are chosen with `GridSearchCV` on chronological folds inside the training years only.
 BLH and VC are left out of the feature set because of the 2024 data gap, which falls inside the test period.
 """)
 
 code(r"""
 from sklearn.ensemble import RandomForestRegressor, HistGradientBoostingRegressor
 from sklearn.linear_model import RidgeCV
-from sklearn.pipeline import make_pipeline
+from sklearn.pipeline import Pipeline
+from sklearn.dummy import DummyRegressor
+from sklearn.model_selection import GridSearchCV
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import mean_absolute_error, r2_score, root_mean_squared_error
 from sklearn.inspection import permutation_importance
@@ -748,11 +809,27 @@ for k in ["fires_300km","fires_600km","fires_TH","fires_KH","fires_MM"]: D["log_
 st_d = pd.get_dummies(D.station_code, prefix="st", dtype=int); D = pd.concat([D, st_d], axis=1)
 FEATS = ["msin","mcos","roadside","t2m","rh","precip","ws","calm_share","ne_wind_share",
          "log_fires_300km","log_fires_600km","log_fires_TH","log_fires_KH","log_fires_MM"] + list(st_d.columns)
-D = D.dropna(subset=FEATS + ["pm25_mean"])
+D = D.dropna(subset=FEATS + ["pm25_mean"]).sort_values(["date","station_code"]).reset_index(drop=True)
+
+# --- Hyper-parameter tuning with GridSearchCV, using ONLY the training years (2016 to 2023) ---
+# Folds are chronological (expanding window): train on years < Y, validate on Y, for Y = 2021, 2022, 2023.
+# This avoids the data leakage that a shuffled K-fold would cause in a time series.
+TR = D[D.year <= 2023].reset_index(drop=True)
+cv_folds = [(np.where(TR.year < Y)[0], np.where(TR.year == Y)[0]) for Y in (2021, 2022, 2023)]
+grid = GridSearchCV(RandomForestRegressor(n_estimators=400, random_state=42, n_jobs=-1),
+                    param_grid={"min_samples_leaf": [1, 3, 5, 10], "max_features": [0.33, 0.5, 1.0]},
+                    cv=cv_folds, scoring="neg_root_mean_squared_error")
+grid.fit(TR[FEATS], TR.pm25_mean)
+BEST_RF = grid.best_params_
+print("GridSearchCV best random-forest parameters:", BEST_RF, f"(validation RMSE {-grid.best_score_:.2f} µg/m³)")
+RESULTS["rf_gridsearch"] = dict(best_params=BEST_RF, cv_rmse=round(-grid.best_score_, 3))
+display(pd.DataFrame(grid.cv_results_)[["param_min_samples_leaf","param_max_features","mean_test_score"]]
+        .assign(cv_RMSE=lambda d: -d.mean_test_score).drop(columns="mean_test_score").sort_values("cv_RMSE").head(6).round(3))
 
 def models():
-    return {"Ridge regression": make_pipeline(StandardScaler(), RidgeCV(alphas=np.logspace(-3, 3, 40))),
-            "Random forest": RandomForestRegressor(n_estimators=600, min_samples_leaf=3, max_features=0.5, random_state=42, n_jobs=-1),
+    return {"Mean baseline (DummyRegressor)": DummyRegressor(strategy="mean"),
+            "Ridge regression": Pipeline([("scale", StandardScaler()), ("ridge", RidgeCV(alphas=np.logspace(-3, 3, 40)))]),
+            "Random forest": RandomForestRegressor(n_estimators=600, random_state=42, n_jobs=-1, **BEST_RF),
             "Gradient boosting": HistGradientBoostingRegressor(max_depth=3, learning_rate=0.05, max_iter=300, l2_regularization=1.0, random_state=42)}
 
 def evaluate(train, test):
@@ -844,8 +921,8 @@ md(r"""
    But fire-heavy months are also unusually dry, and when humidity, rain and ventilation are controlled the fire effect roughly halves and is no longer statistically separable. Fires and dry, stable weather act **together**, so action is needed on both local emissions and provincial and **transboundary** crop-residue and forest burning (the ASEAN Agreement on Transboundary Haze Pollution framework).
 4. **The air is improving, but not fast enough.** Controlling for season and for which stations were reporting, PM2.5 fell by **0.57 µg/m³ per year (95 % CI 0.32 to 0.83)**, about 23 % per decade. The non-parametric Seasonal Mann-Kendall test on the five continuous stations agrees (Sen slope −0.49 µg/m³/yr, p < 0.001).
    Even so, in 2024 to 2025 **every station's mean (16.6 to 28.0 µg/m³) exceeded the Thai annual standard of 15 µg/m³**, all were 3 to 6 times the WHO guideline of 5 µg/m³, and 12.7 % of valid station-days (about 1 in 8) exceeded the 24-hour standard of 37.5 µg/m³.
-5. **Weather and fire data improve monthly prediction, but only modestly.** The random forest reduces error against the seasonal baseline both on 2024 to 2025 (RMSE 4.15 vs 4.83 µg/m³) and in rolling-origin testing (mean RMSE 4.74 vs 5.63 µg/m³).
-   Fires within 300 km, the roadside flag and the share of north-east to east winds are its most informative inputs. Better forecasts need *daily* data, where stagnation events and smoke transport can be resolved.
+5. **Weather and fire data improve monthly prediction, but only modestly.** The tuned random forest reduces error against the seasonal baseline both on 2024 to 2025 (RMSE 4.27 vs 4.83 µg/m³, about 12 % lower) and in rolling-origin testing (mean RMSE 4.76 vs 5.63 µg/m³, about 16 % lower); the naive mean baseline (`DummyRegressor`, RMSE 9.66) is far behind.
+   The share of north-east to east winds and the roadside flag rank highest, followed closely by three fire-count features (Cambodia, within 300 km, Thailand). Better forecasts need *daily* data, where stagnation events and smoke transport can be resolved.
 
 """)
 

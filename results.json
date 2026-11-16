@@ -1,6 +1,17 @@
 {
+  "n_duplicates": 0,
   "n_station_months": 1160,
   "n_stations": 12,
+  "iqr_outliers": {
+    "n": 5,
+    "share": 0.004,
+    "months": [
+      1,
+      2,
+      3
+    ],
+    "n_high": 5
+  },
   "clim_by_month": {
     "1": 39.7,
     "2": 36.7,
@@ -18,6 +29,13 @@
   "peak_month": 1,
   "low_month": 8,
   "peak_to_low_ratio": 2.71,
+  "stl": {
+    "trend_first12": 27.2,
+    "trend_last12": 23.6,
+    "seasonal_range": 30.2,
+    "months_interpolated": 0,
+    "var_share_seasonal": 0.97
+  },
   "road_minus_general": {
     "mean": 5.72,
     "ci95": [
@@ -232,11 +250,23 @@
       }
     ]
   },
+  "rf_gridsearch": {
+    "best_params": {
+      "max_features": 0.33,
+      "min_samples_leaf": 1
+    },
+    "cv_rmse": 5.137
+  },
   "ml_holdout": {
     "Climatology baseline": {
       "RMSE": 4.826,
       "MAE": 3.768,
       "R2": 0.741
+    },
+    "Mean baseline (DummyRegressor)": {
+      "RMSE": 9.661,
+      "MAE": 8.191,
+      "R2": -0.036
     },
     "Ridge regression": {
       "RMSE": 4.689,
@@ -244,9 +274,9 @@
       "R2": 0.756
     },
     "Random forest": {
-      "RMSE": 4.149,
-      "MAE": 3.439,
-      "R2": 0.809
+      "RMSE": 4.268,
+      "MAE": 3.469,
+      "R2": 0.798
     },
     "Gradient boosting": {
       "RMSE": 5.531,
@@ -256,9 +286,9 @@
   },
   "ml_rolling_mean": {
     "Random forest": {
-      "RMSE": 4.744,
+      "RMSE": 4.756,
       "MAE": 3.611,
-      "R2": 0.749
+      "R2": 0.745
     },
     "Ridge regression": {
       "RMSE": 5.128,
@@ -274,23 +304,28 @@
       "RMSE": 5.633,
       "MAE": 4.291,
       "R2": 0.624
+    },
+    "Mean baseline (DummyRegressor)": {
+      "RMSE": 10.032,
+      "MAE": 8.444,
+      "R2": -0.04
     }
   },
   "rf_permutation_importance_rmse_increase": {
-    "Fires \u2264300 km": 1.044,
-    "Roadside flag": 0.951,
-    "NE-E wind share": 0.883,
-    "Fires, Cambodia": 0.721,
-    "Fires, Thailand": 0.587,
-    "Precipitation": 0.309,
-    "Station identity": 0.297,
-    "Temperature": 0.147,
-    "Fires \u2264600 km": 0.114,
-    "Wind speed": 0.064,
-    "Fires, Myanmar": 0.03,
-    "Month (cosine)": 0.025,
-    "Relative humidity": 0.012,
-    "Month (sine)": 0.011,
-    "Calm-hour share": -0.042
+    "NE-E wind share": 0.617,
+    "Roadside flag": 0.574,
+    "Fires, Cambodia": 0.527,
+    "Fires \u2264300 km": 0.524,
+    "Fires, Thailand": 0.52,
+    "Station identity": 0.4,
+    "Precipitation": 0.331,
+    "Fires \u2264600 km": 0.124,
+    "Wind speed": 0.079,
+    "Temperature": 0.077,
+    "Month (cosine)": 0.07,
+    "Relative humidity": 0.014,
+    "Fires, Myanmar": 0.006,
+    "Calm-hour share": -0.005,
+    "Month (sine)": -0.006
   }
 }

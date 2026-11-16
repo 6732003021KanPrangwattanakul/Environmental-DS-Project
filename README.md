@@ -49,7 +49,7 @@ Public debate blames either **local traffic** or **agricultural and forest burni
 
 **Quality control**
 * 1,177 station-months had a PM2.5 value; 17 flagged `**` by PCD (< 50 % valid data) were removed, leaving **1,160 station-months**. The 24 months flagged `*` (50 to 75 %) were kept with their flag.
-* Logical check min24h ≤ mean ≤ max24h (no failures after QC).
+* Logical check min24h ≤ mean ≤ max24h (no failures after QC) and duplicate check on station-year-month (0 duplicates).
 * The **2023 change in the standard** makes exceedance-day counts before and after 1 Jun 2023 non-comparable. For long-run comparison a consistent metric is used instead (months whose maximum 24-h mean exceeded 37.5 µg/m³).
 
 **Meteorology**: hourly values were aggregated to monthly; I derived the **ventilation coefficient** VC = wind speed × boundary-layer height (m²/s), the calm-hour share and the share of north-east to east winds.
@@ -69,7 +69,7 @@ Public debate blames either **local traffic** or **agricultural and forest burni
 | ![](figures/fig02_station_distribution.png) | ![](figures/fig05_driver_seasonal_cycles.png) |
 | **Fig 2.** The 5 highest-median stations are exactly the 5 roadside stations | **Fig 5.** Fires peak in Feb to Mar; ventilation is lowest in Oct; rain keeps October clean |
 
-More: year by month heat map (Fig 4) and correlation matrix (Fig 6). Raw correlations mostly reflect *shared seasonality*, so Part 5 tests the drivers on **anomalies**.
+Also in the notebook: descriptive statistics with skewness and kurtosis; the **1.5 × IQR outlier rule** per station (5 high values, all real dry-season episodes, kept rather than deleted); an **STL decomposition** of the 5 continuous stations (Fig 4b: seasonal component carries 97 % of the variance, trend falls from 27.2 to 23.6 µg/m³ between the first and last year); the year by month heat map (Fig 4); and the correlation matrix (Fig 6, Spearman). Raw correlations mostly reflect *shared seasonality*, so Part 5 tests the drivers on **anomalies**.
 
 ---
 
@@ -100,12 +100,13 @@ All figures are in [`figures/`](figures/). They use a single colour-blind-valida
 
 | Model | Hold-out 2024 to 2025 RMSE (µg/m³) | R² | Rolling-origin 2021 to 2025 mean RMSE |
 |---|---|---|---|
-| Climatology baseline | 4.83 | 0.74 | 5.63 |
-| Ridge regression | 4.69 | 0.76 | 5.13 |
-| **Random forest** | **4.15** | **0.81** | **4.74** |
+| Mean baseline (`DummyRegressor`) | 9.66 | −0.04 | 10.03 |
+| Climatology baseline (station × month mean) | 4.83 | 0.74 | 5.63 |
+| Ridge regression (`Pipeline`: StandardScaler + Ridge) | 4.69 | 0.76 | 5.13 |
+| **Random forest** (tuned with `GridSearchCV`) | **4.27** | **0.80** | **4.76** |
 | Gradient boosting | 5.53 | 0.66 | 5.38 |
 
-The random forest cuts error by about 14 % (hold-out) and 16 % (rolling) compared with the baseline. Its most informative inputs are **fires within 300 km**, the roadside flag and the share of north-east to east winds (Fig 14).
+Random-forest hyper-parameters were chosen with `GridSearchCV` on chronological folds inside the training years only (best: `max_features = 0.33`, `min_samples_leaf = 1`). The random forest cuts error by about 12 % (hold-out) and 16 % (rolling) compared with the climatology baseline. The share of north-east to east winds and the roadside flag rank highest in permutation importance, followed closely by three fire-count features (Cambodia, within 300 km, Thailand) (Fig 14).
 
 ![](figures/fig14_ml_results.png)
 
@@ -122,6 +123,15 @@ The random forest cuts error by about 14 % (hold-out) and 16 % (rolling) compare
 **Limitations:** monthly resolution (day-scale stagnation and smoke episodes are averaged out); one ERA5 grid cell for the whole city, with a BLH gap in 2024; fire *detections* are not *emissions*; correlation is not source attribution (that would need chemical speciation or a chemical-transport model).
 
 ---
+
+## How this project follows the 2107540 workflow
+| Course workflow step | Where it is in this project | Course methods used |
+|---|---|---|
+| **Define & Ask** | Section 1, research questions RQ1 to RQ5 | |
+| **Acquire & Prepare** | Sections 2 and 3, notebook Parts 1 and 2 | importing several file formats, `isna()`, duplicates, type conversion, datetime features, documented missing-value strategy (left missing, not filled), aggregation |
+| **Analyze & Interpret** | Sections 4 and 5, notebook Parts 3 and 4 | descriptive statistics, skewness, 1.5 × IQR rule, Pearson vs Spearman, correlation ≠ causation (confounding check), STL decomposition |
+| **Visualize & Communicate** | Section 6, `figures/`, presentation | box plots, histograms, line and scatter plots, heat maps, small multiples; categorical, sequential and diverging colour used by job; no 3D or chartjunk |
+| **Machine learning** (optional) | Section 7, notebook Part 6 | chronological train/test split, cross-validation without leakage, `Pipeline`, `StandardScaler`, one-hot encoding, `DummyRegressor` baseline, `GridSearchCV`, MAE / RMSE / R², random forest |
 
 ## Repository structure
 ```
