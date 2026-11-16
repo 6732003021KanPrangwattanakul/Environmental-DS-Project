@@ -1,0 +1,296 @@
+{
+  "n_station_months": 1160,
+  "n_stations": 12,
+  "clim_by_month": {
+    "1": 39.7,
+    "2": 36.7,
+    "3": 28.6,
+    "4": 25.7,
+    "5": 19.3,
+    "6": 14.8,
+    "7": 15.0,
+    "8": 14.7,
+    "9": 16.5,
+    "10": 21.6,
+    "11": 27.1,
+    "12": 33.5
+  },
+  "peak_month": 1,
+  "low_month": 8,
+  "peak_to_low_ratio": 2.71,
+  "road_minus_general": {
+    "mean": 5.72,
+    "ci95": [
+      5.26,
+      6.19
+    ],
+    "pct": 25.3,
+    "n_months": 119,
+    "share_months_road_higher": 0.992,
+    "wilcoxon_p": 2.952842322682829e-21
+  },
+  "trend_fe": {
+    "slope_per_year": -0.571,
+    "ci95": [
+      -0.828,
+      -0.315
+    ],
+    "p": 1.2558318939859643e-05,
+    "r2": 0.788,
+    "pct_per_decade": -23.4
+  },
+  "trend_smk": {
+    "sen_slope_per_year": -0.494,
+    "p": 4.4394272180614536e-05,
+    "tau": -0.305,
+    "trend": "decreasing"
+  },
+  "year_effects_vs_2016": {
+    "2016": 0.0,
+    "2017": -2.85,
+    "2018": -3.05,
+    "2019": -4.49,
+    "2020": -7.36,
+    "2021": -7.01,
+    "2022": -7.67,
+    "2023": -4.23,
+    "2024": -7.58,
+    "2025": -8.02
+  },
+  "recent_annual_mean_range": [
+    16.6,
+    28.0
+  ],
+  "recent_all_stations_above_thai_annual_15": true,
+  "recent_exceed_share_days": 0.127,
+  "recent_exceed_days_per_year_range": [
+    18.5,
+    74.5
+  ],
+  "recent_exceed_days_per_year_by_station": {
+    "02T": 59.0,
+    "03R": 57.5,
+    "05T": 36.5,
+    "10T": 31.0,
+    "11T": 31.5,
+    "12T": 31.5,
+    "50R": 54.5,
+    "52R": 53.0,
+    "53R": 53.0,
+    "54R": 74.5,
+    "59T": 18.5,
+    "61T": 27.5
+  },
+  "share_station_months_max_over_37_5_by_year": {
+    "2016": 0.6,
+    "2017": 0.567,
+    "2018": 0.573,
+    "2019": 0.625,
+    "2020": 0.458,
+    "2021": 0.403,
+    "2022": 0.524,
+    "2023": 0.542,
+    "2024": 0.582,
+    "2025": 0.434
+  },
+  "anomaly_corr": {
+    "All months": {
+      "log_fires_300km": 0.37,
+      "log_fires_600km": 0.37,
+      "log_fires_TH": 0.37,
+      "log_fires_KH": 0.29,
+      "log_fires_MM": 0.19,
+      "vc": 0.12,
+      "blh": 0.12,
+      "ws": 0.03,
+      "calm_share": -0.01,
+      "precip": -0.21,
+      "rh": -0.25,
+      "t2m": -0.05,
+      "ne_wind_share": 0.24
+    },
+    "Dry season (Nov to Apr)": {
+      "log_fires_300km": 0.44,
+      "log_fires_600km": 0.45,
+      "log_fires_TH": 0.42,
+      "log_fires_KH": 0.41,
+      "log_fires_MM": 0.23,
+      "vc": 0.07,
+      "blh": 0.04,
+      "ws": 0.0,
+      "calm_share": -0.02,
+      "precip": -0.27,
+      "rh": -0.23,
+      "t2m": -0.15,
+      "ne_wind_share": 0.26
+    }
+  },
+  "regression_fe": {
+    "coef": {
+      "log_fires_600km": 1.125,
+      "vc_k": -4.012,
+      "rain_100": -0.419,
+      "rh": -0.669,
+      "t": -0.696
+    },
+    "p": {
+      "log_fires_600km": 0.2323,
+      "vc_k": 0.067,
+      "rain_100": 0.7171,
+      "rh": 0.0281,
+      "t": 0.0
+    },
+    "r2_base": 0.823,
+    "r2_full": 0.857,
+    "n": 114
+  },
+  "pm_per_fire_doubling": 0.78,
+  "fire_coef_attenuation": {
+    "(1) fires only": {
+      "fire_coef": 2.255,
+      "fire_se": 0.825,
+      "fire_p": 0.006,
+      "vc_coef": NaN,
+      "vc_p": NaN,
+      "R2": 0.838
+    },
+    "(2) + ventilation": {
+      "fire_coef": 2.299,
+      "fire_se": 0.878,
+      "fire_p": 0.009,
+      "vc_coef": -0.246,
+      "vc_p": 0.856,
+      "R2": 0.838
+    },
+    "(3) + rain & humidity": {
+      "fire_coef": 1.125,
+      "fire_se": 0.942,
+      "fire_p": 0.232,
+      "vc_coef": -4.012,
+      "vc_p": 0.067,
+      "R2": 0.857
+    }
+  },
+  "season_level": {
+    "r_logfires_pm": 0.51,
+    "p": 0.162,
+    "n": 9,
+    "table": [
+      {
+        "season": 2017,
+        "pm25": 35.1,
+        "fires": 31701,
+        "n": 6
+      },
+      {
+        "season": 2018,
+        "pm25": 34.0,
+        "fires": 32603,
+        "n": 6
+      },
+      {
+        "season": 2019,
+        "pm25": 32.9,
+        "fires": 49503,
+        "n": 6
+      },
+      {
+        "season": 2020,
+        "pm25": 32.0,
+        "fires": 57195,
+        "n": 6
+      },
+      {
+        "season": 2021,
+        "pm25": 33.2,
+        "fires": 34128,
+        "n": 6
+      },
+      {
+        "season": 2022,
+        "pm25": 28.7,
+        "fires": 14687,
+        "n": 6
+      },
+      {
+        "season": 2023,
+        "pm25": 34.2,
+        "fires": 36564,
+        "n": 6
+      },
+      {
+        "season": 2024,
+        "pm25": 29.7,
+        "fires": 33163,
+        "n": 6
+      },
+      {
+        "season": 2025,
+        "pm25": 31.1,
+        "fires": 28352,
+        "n": 6
+      }
+    ]
+  },
+  "ml_holdout": {
+    "Climatology baseline": {
+      "RMSE": 4.826,
+      "MAE": 3.768,
+      "R2": 0.741
+    },
+    "Ridge regression": {
+      "RMSE": 4.689,
+      "MAE": 3.76,
+      "R2": 0.756
+    },
+    "Random forest": {
+      "RMSE": 4.149,
+      "MAE": 3.439,
+      "R2": 0.809
+    },
+    "Gradient boosting": {
+      "RMSE": 5.531,
+      "MAE": 4.39,
+      "R2": 0.66
+    }
+  },
+  "ml_rolling_mean": {
+    "Random forest": {
+      "RMSE": 4.744,
+      "MAE": 3.611,
+      "R2": 0.749
+    },
+    "Ridge regression": {
+      "RMSE": 5.128,
+      "MAE": 3.978,
+      "R2": 0.689
+    },
+    "Gradient boosting": {
+      "RMSE": 5.375,
+      "MAE": 4.16,
+      "R2": 0.678
+    },
+    "Climatology baseline": {
+      "RMSE": 5.633,
+      "MAE": 4.291,
+      "R2": 0.624
+    }
+  },
+  "rf_permutation_importance_rmse_increase": {
+    "Fires \u2264300 km": 1.044,
+    "Roadside flag": 0.951,
+    "NE-E wind share": 0.883,
+    "Fires, Cambodia": 0.721,
+    "Fires, Thailand": 0.587,
+    "Precipitation": 0.309,
+    "Station identity": 0.297,
+    "Temperature": 0.147,
+    "Fires \u2264600 km": 0.114,
+    "Wind speed": 0.064,
+    "Fires, Myanmar": 0.03,
+    "Month (cosine)": 0.025,
+    "Relative humidity": 0.012,
+    "Month (sine)": 0.011,
+    "Calm-hour share": -0.042
+  }
+}

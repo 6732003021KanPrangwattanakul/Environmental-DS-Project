@@ -1,0 +1,13 @@
+station_code,name,lat,lon,type
+02T,"Bansomdejchaopraya Rajabhat Univ., Thon Buri",13.732846,100.487662,General
+03R,"Kanchanaphisek Rd (Hwy 3902), Bang Khun Thian",13.636514,100.414262,Roadside
+05T,"Thai Meteorological Dept., Bang Na",13.666183,100.605742,General
+10T,"NHA Khlong Chan, Bang Kapi",13.779873,100.646009,General
+11T,NHA Huai Khwang sports ground,,,General
+12T,"Nonsi Witthaya School, Yan Nawa",13.70806667,100.5473333,General
+50R,"Chulalongkorn Hospital, Rama IV Rd",13.729852,100.536501,Roadside
+52R,"Thonburi Power Sub-station, Intharaphitak Rd",13.727622,100.486568,Roadside
+53R,"Chokchai Police Station, Lat Phrao Rd",13.7954248,100.5930298,Roadside
+54R,"NHA Din Daeng, Din Daeng Rd",13.76251667,100.5502,Roadside
+59T,"Government Public Relations Dept., Phaya Thai",13.783185,100.540489,General
+61T,"Bodindecha School, Wang Thonglang",13.769634,100.614567,General

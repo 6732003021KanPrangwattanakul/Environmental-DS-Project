@@ -1,0 +1,2 @@
+Source: NASA FIRMS Country Yearly Summary, MODIS Collection 6.1 Standard Processing (MCD14ML), https://firms.modaps.eosdis.nasa.gov/country/ ; files fetched from https://firms.modaps.eosdis.nasa.gov/data/country/modis/<YEAR>/modis_<YEAR>_<COUNTRY>.csv
+Downloaded: 2026-11-16T17:11:23.083Z
